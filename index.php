@@ -4,31 +4,46 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css">
     <title>Currency Converter</title>
 </head>
 
 <body>
 
-    <form method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
-        Please enter the amount:
-        <input type="text" name="amount">
-        <select name="firstcurrency" id="firstcurrency">
-            <option value="Select">Select</option>
-            <option value="EUR">EUR</option>
-            <option value="KWD">KWD</option>
-            <option value="US">US</option>
-        </select>
-        convert Into:
-        <select name="secondcurrency" id="secondcurrency">
-            <option value="Select">Select</option>
-            <option value="EUR">EUR</option>
-            <option value="KWD">KWD</option>
-            <option value="US">US</option>
-        </select>
+    <div class="wrapper">
+        <header> Currency Converter</header>
+        <form method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
+            <div class="amount">
+                   <p> Please enter the amount:</p>
+                    <input type="text" name="amount" value="1">
 
-        <button type="submit" formmethod="get"> GO !</button>
-    </form>
-
+            </div>
+            <div class="drop-list">  
+                <div class="from"> 
+                    <p>From</p>     
+                    <select name="firstcurrency" id="firstcurrency">
+                        <option value="Select">Select</option>
+                        <option value="EUR">EUR</option>
+                        <option value="KWD">KWD</option>
+                        <option value="US">US</option>
+                    </select>
+                </div>    
+                    <div class="to">
+                        <p> To:</p>
+                        
+                        <select name="secondcurrency" id="secondcurrency">
+                            <option value="Select">Select</option>
+                            <option value="EUR">EUR</option>
+                            <option value="KWD">KWD</option>
+                            <option value="US">US</option>
+                        </select>
+                    </div>
+                    <div class="exchange-rate"> getting exchange rate...</div>
+                    <button type="submit" formmethod="get"> Get Exchange Rate</button>
+            </div>        
+           
+        </form>
+    </div>
     <?php
     if (isset($_GET['amount']) && isset($_GET['firstcurrency']) && isset($_GET['secondcurrency'])) {
         $amount = $_GET['amount'];
