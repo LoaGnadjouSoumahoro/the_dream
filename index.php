@@ -4,87 +4,102 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css">
     <title>Currency Converter</title>
+    
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
 <body>
 
-    <form method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
-        Please enter the amount:
-        <input type="text" name="amount">
-        <select name="firstcurrency" id="firstcurrency">
-            <option value="Select">Select</option>
-            <option value="EUR">EUR</option>
-            <option value="KWD">KWD</option>
-            <option value="US">US</option>
-        </select>
-        convert Into:
-        <select name="secondcurrency" id="secondcurrency">
-            <option value="Select">Select</option>
-            <option value="EUR">EUR</option>
-            <option value="KWD">KWD</option>
-            <option value="US">US</option>
-        </select>
+    <div class="wrapper">
+        <header> Currency Converter</header>
+        <form method="GET" action="./conversion.php" id="conversionForm">
+            <div class="amount">
+                <p> Please enter the amount:</p>
+                <input type="text" name="amount" value="0">
+            </div>
+            <div class="drop-list">
+                <div class="from">
+                    <p>From</p>
+                    <div class="select-box">
+                        <select name="firstcurrency" id="firstcurrency">
+                            <option value="Select">Select</option>
+                            <option value="EUR">EUR</option>
+                            <option value="KWD">KWD</option>
+                            <option value="USD">USD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="ARS">ARS</option>
+                            <option value="XAF">XAF</option>
+                            <option value="BRL">BRL</option>
+                            <option value="BRL">BRL</option>
+                            <option value="TWD">TWD</option>
 
-        <button type="submit" formmethod="get"> GO !</button>
-    </form>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" name="invert" value="1">
+                <div class="icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                <div class="to">
+                    <p> To:</p>
+                    <div class="select-box">
+                        <select name="secondcurrency" id="secondcurrency">
+                            <option value="Select">Select</option>
+                            <option value="EUR">EUR</option>
+                            <option value="KWD">KWD</option>
+                            <option value="USD">USD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="ARS">ARS</option>
+                            <option value="XAF">XAF</option>
+                            <option value="BRL">BRL</option>
+                            <option value="BRL">BRL</option>
+                            <option value="TWD">TWD</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="exchange-rate"> 
+                <?php
 
-    <?php
-    if (isset($_GET['amount']) && isset($_GET['firstcurrency']) && isset($_GET['secondcurrency'])) {
-        $amount = $_GET['amount'];
-        $firstCurrency = $_GET['firstcurrency'];
-        $secondCurrency = $_GET['secondcurrency'];
+                    if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['amount']) && isset($_GET['firstcurrency']) && isset($_GET['secondcurrency'])) {
+                        include('./conversion.php');
+                    } else {
+                        echo 'Getting exchange rate...';
+                    }
+                ?> 
+            </div>
+            <button type="button" onclick="getExchangeRate()"> Get Exchange Rate</button>
+                
+            </div>
+        </form>
+    </div>
 
-        if (!empty($amount) && $firstCurrency !== 'Select' && $secondCurrency !== 'Select') {
-            $endpoint = "https://currency-converter18.p.rapidapi.com/api/v1/convert?";
-            $fromCurrency = $firstCurrency;
-            $toCurrency = $secondCurrency;
+    <!-- <?php
 
-            // Building the final API endpoint
-            $finalEndpoint = "{$endpoint}from={$fromCurrency}&to={$toCurrency}&amount={$amount}";
+include('./conversion.php');
+    ?> -->
 
-            // cURL request to the API
-            $curl = curl_init();
+     <script>
+        // Fonction pour effectuer la requête AJAX
+        function getExchangeRate() {
+            var form = document.getElementById('conversionForm');
+            var formData = new FormData(form);
 
-            curl_setopt_array($curl, [
-                CURLOPT_URL => $finalEndpoint,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "GET",
-                CURLOPT_HTTPHEADER => [
-                    "X-RapidAPI-Host: currency-converter18.p.rapidapi.com",
-                    "X-RapidAPI-Key: 5d222445a9msh2e4bf8e8bf88484p15d3c6jsn95fd8d349b11"  // Remplacez VOTRE_CLE_API par votre clé API
-                ],
-            ]);
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', './conversion.php?' + new URLSearchParams(formData).toString(), true);
 
-            $response = curl_exec($curl);
-            $err = curl_error($curl);
-
-            curl_close($curl);
-
-            if ($err) {
-                echo "cURL Error #:" . $err;
-            } else {
-                // Décoder la réponse JSON
-                $data = json_decode($response, true);
-
-                // Vérifier si la conversion a réussi
-                if ($data['success']) {
-                    // Afficher le résultat de la conversion avec 2 chiffres après la virgule
-                    echo "Converted Amount: " . number_format($data['result']['convertedAmount'], 2);
-                } else {
-                    // Afficher un message en cas d'échec de la conversion
-                    echo "Conversion failed. Validation Message: " . implode(", ", $data['validationMessage']);
+            xhr.onload = function () {
+                if (xhr.status == 200) {
+                    // Mettez à jour la div avec le résultat de la conversion
+                    document.querySelector('.exchange-rate').innerHTML = xhr.responseText;
                 }
-            }
-        } else {
-            echo "Missing required data";
+            };
+
+            xhr.send();
         }
-    }
-    ?>
+    </script> 
+
 </body>
 
 </html>
