@@ -2,66 +2,104 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css">
-    <title>Document</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Currency Converter</title>
 </head>
 
 <body>
+
     <div class="wrapper">
         <header> Currency Converter</header>
-        <form method="GET" action="" id="conversionForm">
+        <form method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
             <div class="amount">
-                <p> Please enter the amount:</p>
-                <input type="text" name="amount" value="<?php echo isset($_GET['amount']) ? htmlspecialchars($_GET['amount']) : ''; ?>">
+                   <p> Please enter the amount:</p>
+                    <input type="text" name="amount" value="1">
+
             </div>
-            <div class="drop-list">
-                <div class="from">
-                    <p>From:</p>
-                    <div class="select-box">
-                        <select name="firstcurrency" id="firstcurrency">
-                            <?php
-                            $currencies = ['Select', 'KWD', 'USD', 'CAD', 'ARS', 'XAF', 'BRL', 'TWD', 'EUR'];
-                            foreach ($currencies as $currency) {
-                                $selected = (isset($_GET['firstcurrency']) && $_GET['firstcurrency'] == $currency) ? 'selected' : '';
-                                echo "<option value=\"$currency\" $selected>$currency</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                </div>
-                <input type="hidden" name="invert" value="1">
-                <div class="icon">
-                <i class="fa-solid fa-arrow-right"></i>
-                </div>
-                <div class="to">
-                    <p> To:</p>
-                    <div class="select-box">
+            <div class="drop-list">  
+                <div class="from"> 
+                    <p>From</p>     
+                    <select name="firstcurrency" id="firstcurrency">
+                        <option value="Select">Select</option>
+                        <option value="EUR">EUR</option>
+                        <option value="KWD">KWD</option>
+                        <option value="US">US</option>
+                    </select>
+                </div>    
+                    <div class="to">
+                        <p> To:</p>
+                        
                         <select name="secondcurrency" id="secondcurrency">
-                            <?php
-                            foreach ($currencies as $currency) {
-                                $selected = (isset($_GET['secondcurrency']) && $_GET['secondcurrency'] == $currency) ? 'selected' : '';
-                                echo "<option value=\"$currency\" $selected>$currency</option>";
-                            }
-                            ?>
+                            <option value="Select">Select</option>
+                            <option value="EUR">EUR</option>
+                            <option value="KWD">KWD</option>
+                            <option value="US">US</option>
                         </select>
                     </div>
-                </div>
-            </div>
-            <div class="exchange-rate"> 
-                <?php
-                if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['amount']) && isset($_GET['firstcurrency']) && isset($_GET['secondcurrency'])) {
-                    include('./conversion.php');
-                } else {
-                    echo 'Getting exchange rate...';
-                }
-                ?> 
-            </div>
-            <button type="submit"> Get Exchange Rate</button>
+                    <div class="exchange-rate"> getting exchange rate...</div>
+                    <button type="submit" formmethod="get"> Get Exchange Rate</button>
+            </div>        
+           
         </form>
     </div>
+    <?php
+    if (isset($_GET['amount']) && isset($_GET['firstcurrency']) && isset($_GET['secondcurrency'])) {
+        $amount = $_GET['amount'];
+        $firstCurrency = $_GET['firstcurrency'];
+        $secondCurrency = $_GET['secondcurrency'];
+
+        if (!empty($amount) && $firstCurrency !== 'Select' && $secondCurrency !== 'Select') {
+            $endpoint = "https://currency-converter18.p.rapidapi.com/api/v1/convert?";
+            $fromCurrency = $firstCurrency;
+            $toCurrency = $secondCurrency;
+
+            // Building the final API endpoint
+            $finalEndpoint = "{$endpoint}from={$fromCurrency}&to={$toCurrency}&amount={$amount}";
+
+            // cURL request to the API
+            $curl = curl_init();
+
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $finalEndpoint,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => [
+                    "X-RapidAPI-Host: currency-converter18.p.rapidapi.com",
+                    "X-RapidAPI-Key: 5d222445a9msh2e4bf8e8bf88484p15d3c6jsn95fd8d349b11"  // Remplacez VOTRE_CLE_API par votre clé API
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+
+            curl_close($curl);
+
+            if ($err) {
+                echo "cURL Error #:" . $err;
+            } else {
+                // Décoder la réponse JSON
+                $data = json_decode($response, true);
+
+                // Vérifier si la conversion a réussi
+                if ($data['success']) {
+                    // Afficher le résultat de la conversion avec 2 chiffres après la virgule
+                    echo "Converted Amount: " . number_format($data['result']['convertedAmount'], 2);
+                } else {
+                    // Afficher un message en cas d'échec de la conversion
+                    echo "Conversion failed. Validation Message: " . implode(", ", $data['validationMessage']);
+                }
+            }
+        } else {
+            echo "Missing required data";
+        }
+    }
+    ?>
 </body>
 
 </html>
